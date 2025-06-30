@@ -53,3 +53,4 @@ Replace `YOUR_...` placeholders with your actual credentials.
 6. Run the Next.js development server: `npm run dev`
 
 The application should now be running, typically on `http://localhost:9002` (or your configured port).
+```

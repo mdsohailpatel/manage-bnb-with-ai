@@ -95,11 +95,14 @@ export default function HomeDetailPage() {
 
   return (
     <div className="space-y-8">
-      <Button variant="outline" size="sm" asChild className="mb-6">
-        <Link href="/dashboard">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
-        </Link>
-      </Button>
+       <div className="flex justify-between items-center mb-6">
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
+          </Link>
+        </Button>
+      </div>
+
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
@@ -111,6 +114,7 @@ export default function HomeDetailPage() {
 
       {rooms.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-card">
+          <DoorOpen className="mx-auto h-16 w-16 text-muted-foreground/50 mb-4" />
           <h2 className="text-2xl font-semibold mb-2">No Rooms Yet!</h2>
           <p className="text-muted-foreground mb-6">
             Add rooms to this home to start analyzing objects.
@@ -120,12 +124,12 @@ export default function HomeDetailPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rooms.map((room) => (
-            <RoomCard 
-              key={room.id} 
-              room={room} 
-              homeId={homeId} 
-              onRoomDeleted={fetchHomeAndRooms} 
-              onRoomUpdated={fetchHomeAndRooms} // Ensure this prop is passed
+            <RoomCard
+              key={room.id}
+              room={room}
+              homeId={homeId}
+              homeName={home.name} // Pass homeName for PDF title in RoomCard
+              onRoomAction={fetchHomeAndRooms} // Corrected prop name
             />
           ))}
         </div>

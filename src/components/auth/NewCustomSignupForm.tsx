@@ -4,9 +4,9 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // Corrected import
-import { Eye, EyeOff } from "lucide-react"; // For password toggle
-import * as _React from "react"; // For useState
+import { useRouter } from "next/navigation"; 
+import { Eye, EyeOff } from "lucide-react"; 
+import * as _React from "react"; 
 
 import { signupSchema, type SignupFormData } from "@/schemas/authSchemas";
 import { signUpWithEmail } from "@/lib/auth";
@@ -32,6 +32,26 @@ export function NewCustomSignupForm() {
     },
   });
 
+  const sendWelcomeEmail = async (email: string, displayName: string) => {
+    try {
+      const response = await fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, displayName }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.warn("Failed to send welcome email:", errorData.message);
+        // Optionally, show a non-critical toast to the user or admin
+        // toast({ title: "Info", description: "Welcome email could not be sent.", variant: "default" });
+      } else {
+        console.log("Welcome email initiated successfully.");
+      }
+    } catch (error) {
+      console.warn("Error calling send-welcome-email API:", error);
+    }
+  };
+
   const onSubmit: SubmitHandler<SignupFormData> = async (data) => {
     showLoader();
     try {
@@ -44,14 +64,20 @@ export function NewCustomSignupForm() {
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         displayName: data.displayName,
-        email: data.email, // Use email from form data
+        email: data.email, 
         createdAt: serverTimestamp(),
       });
 
       toast({
         title: "Signup Successful",
-        description: "Your account has been created. Welcome!",
+        description: "Your account has been created. Redirecting...",
       });
+      sessionStorage.setItem("showWelcomeOnLoad", "true");
+      sessionStorage.setItem("lastAuthAction", "signup");
+      
+      // Send welcome email (fire and forget, don't block UI)
+      sendWelcomeEmail(data.email, data.displayName);
+
       router.push("/dashboard");
       // hideLoader() handled by AppRouterEvents
     } catch (error: any) {
@@ -73,7 +99,6 @@ export function NewCustomSignupForm() {
             <p className="auth-heading-yashasvi">Sign Up</p>
             
             <div className="auth-field-yashasvi">
-              {/* Icon for name (optional, can use a generic user icon) */}
               <svg viewBox="0 0 24 24" fill="currentColor" height="16" width="16" xmlns="http://www.w3.org/2000/svg" className="auth-input-icon-yashasvi">
                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
               </svg>

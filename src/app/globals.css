@@ -72,7 +72,8 @@ main {
     --sidebar-ring: 326 70% 60%;
 
     /* MuhammadHasann Animated Button Custom Properties adapted to theme */
-    --mh-button-black-700: hsl(var(--primary)); /* Use theme primary */
+    /* These are kept for now in case they are re-enabled elsewhere, but the specific button is removed. */
+    --mh-button-black-700: hsl(var(--primary));
     --mh-button-border-radius: 9999px;
     --mh-button-transition: 0.3s ease-in-out;
     --mh-button-active-shadow-color: hsla(var(--primary-hsl-values), 0.6);
@@ -133,15 +134,6 @@ main {
     --sidebar-accent-foreground: 0 0% 85%;
     --sidebar-border: 240 30% 30%;
     --sidebar-ring: 326 70% 60%;
-
-    /* MuhammadHasann Animated Button Custom Properties adapted to theme */
-    --mh-button-black-700: hsl(var(--primary));
-    --mh-button-active-shadow-color: hsla(var(--primary-hsl-values), 0.6);
-    --mh-button-gradient-start: hsla(var(--primary-hsl-values), 0.6);
-    --mh-button-gradient-mid: hsla(var(--primary-hsl-values), 0.4);
-    --mh-button-dots-color: hsl(var(--primary-foreground));
-    --mh-button-sparkle-color: hsl(var(--primary-foreground));
-    --mh-button-text-color: hsl(var(--primary-foreground));
   }
 }
 
@@ -156,7 +148,21 @@ main {
   }
 }
 
-/* Banter Loader Styles */
+/* For visually hidding elements but keeping them accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+
+/* Banter Loader Styles (Global Loader) */
 .loader-overlay {
   position: fixed;
   top: 0;
@@ -165,7 +171,7 @@ main {
   height: 100vh;
   background-color: hsla(var(--background-hsl-values), 0.6);
   backdrop-filter: blur(2px);
-  z-index: 9998;
+  z-index: 9998; /* Below AI Loader */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -179,7 +185,7 @@ main {
   height: 72px;
   margin-left: -36px;
   margin-top: -36px;
-  z-index: 9999;
+  z-index: 9999; /* Below AI Loader */
 }
 
 .banter-loader__box {
@@ -352,62 +358,273 @@ main {
 }
 .banter-loader__box:nth-child(9) { animation: moveBox-9 4s infinite; }
 
-/* AI Analysis Loader ("mrhyddenn" spinner) Styles */
-.ai-analysis-loader-overlay {
+
+/* New AI Analysis Loader Styles */
+.ai-loader-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: hsla(var(--background-hsl-values), 0.7);
-  backdrop-filter: blur(3px);
-  z-index: 10000;
-  display: flex;
-  flex-direction: column; /* For centering text below spinner */
-  justify-content: center;
-  align-items: center;
-}
-
-.ai-spinner-container { /* Container for spinner and text */
+  z-index: 10000; /* Ensure it's on top */
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 1rem; /* Space between spinner and text */
+  background-color: hsla(var(--background-hsl-values), 0.75); /* Semi-transparent background from theme */
+  backdrop-filter: blur(4px); /* Blur effect */
+  overflow: hidden;
 }
 
-/* From Uiverse.io by mrhyddenn - Adapted for AI Loader */
-.ai-spinner {
-  width: 6em; /* Increased size */
-  height: 6em; /* Increased size */
-  cursor: not-allowed;
-  border-radius: 50%;
-  border: 3px solid hsl(var(--border)); /* Thicker border, uses theme border color */
-  box-shadow: -12px -12px 12px hsla(var(--primary-hsl-values), 0.7),
-              0px -12px 12px 0px hsla(var(--accent-hsl-values), 0.7),
-              12px -12px 12px hsla(var(--destructive-hsl-values), 0.5),
-              12px 0 12px hsla(var(--destructive-hsl-values), 0.8),
-              12px 12px 12px 0px hsla(var(--accent-hsl-values), 0.6),
-              0 12px 12px 0px hsla(var(--accent-hsl-values), 0.5),
-              -12px 12px 12px 0px hsla(var(--accent-hsl-values), 0.4);
-  animation: rot55 0.9s linear infinite; /* Slightly slower animation */
+/* User's provided loader CSS */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Removed width/height from here, will be controlled by .loading-wide or the overlay */
 }
 
-.ai-spinner-inner { /* Renamed from .spinnerin to avoid conflict */
-  border: 3px solid hsl(var(--border));  /* Thicker border */
-  width: 3em; /* Increased size */
-  height: 3em; /* Increased size */
-  border-radius: 50%;
+.loading-wide {
+  width: 150px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.color {
+  background-color: #4285f4; /* Google Blue - default, overridden by specific elements */
+}
+
+.l1 {
+  width: 15px;
+  height: 65px;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  animation: move-h 1.2s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+  background-color: #f4b400; /* Google Yellow */
 }
 
-@keyframes rot55 {
-  to {
+.l2 {
+  width: 15px;
+  height: 60px;
+  position: absolute;
+  transform: rotate(90deg);
+  animation: move-v 1.2s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+  background-color: #db4437; /* Google Red */
+}
+
+@keyframes move-h {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    top: 30%;
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes move-v {
+  0% {
+    left: 0;
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  50% {
+    left: 45%;
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.animation-effect-light {
+  animation: effect 0.2s 0.1s infinite linear;
+}
+.animation-effect-light-d {
+  animation: effect 0.3s 0.2s infinite linear;
+}
+.animation-effect-rot {
+  animation: rot 0.8s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+.animation-effect-scale {
+  animation: scale 0.8s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+}
+
+@keyframes effect {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes rot {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }
+
+@keyframes scale {
+  0% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.9;
+  }
+  100% {
+    scale: 1;
+  }
+}
+
+.e1 {
+  width: 1px;
+  height: 40px;
+  opacity: 0.3;
+  position: absolute;
+  top: 0;
+  left: 8%;
+  background-color: #0f9d58; /* Google Green */
+}
+
+.e2 {
+  width: 60px;
+  height: 1px;
+  opacity: 0.8;
+  position: absolute;
+  top: 8%;
+  left: 0;
+  background-color: #4285f4; /* Google Blue */
+}
+
+.e3 {
+  position: absolute;
+  top: 10%;
+  left: 12%;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  color: #4285f4; /* Google Blue */
+}
+
+.e4 {
+  width: 1px;
+  height: 40px;
+  opacity: 0.3;
+  position: absolute;
+  top: 90%;
+  right: 10%;
+  background-color: #db4437; /* Google Red */
+}
+
+.e5 {
+  width: 40px;
+  height: 1px;
+  opacity: 0.3;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #f4b400; /* Google Yellow */
+}
+
+.e6 {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 32px;
+  color: #0f9d58; /* Google Green */
+}
+
+.e7 {
+  width: 1px;
+  height: 20px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: rotate(45deg);
+  animation: height 1s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+  background-color: #f4b400; /* Google Yellow */
+}
+
+@keyframes height {
+  0% {
+    bottom: 0%;
+    left: 0%;
+    height: 0px;
+  }
+  25% {
+    height: 90px;
+  }
+  50% {
+    bottom: 100%;
+    left: 100%;
+    height: 90px;
+  }
+  75% {
+    height: 0px;
+  }
+  100% {
+    bottom: 0%;
+    left: 0%;
+    height: 0px;
+  }
+}
+
+.e8 {
+  width: 20px;
+  height: 1px;
+  position: absolute;
+  bottom: 50%;
+  left: 0;
+  animation: width 1.5s infinite cubic-bezier(0.65, 0.05, 0.36, 1);
+  background-color: #0f9d58; /* Google Green */
+}
+
+@keyframes width {
+  0% {
+    left: 0%;
+    width: 0px;
+  }
+  50% {
+    left: 100%;
+    width: 90px;
+  }
+  100% {
+    left: 0%;
+    width: 0px;
+  }
+}
+/* End New AI Analysis Loader Styles */
+
 
 /* Codepen Button (Download PDF in ObjectAnalysisCard) */
 .codepen-button {
@@ -468,211 +685,7 @@ main {
   color: hsl(var(--card-foreground));
 }
 
-/* MuhammadHasann Animated Button CSS (for Analyze Images) */
-.analyze-button-animated {
-  /* Use theme variables for colors */
-  --mh-button-black-700: hsl(var(--primary));
-  --mh-button-border-radius: 9999px;
-  --mh-button-transition: 0.3s ease-in-out;
-  --mh-button-offset: 2px;
-
-  --mh-button-active-shadow-color: hsla(var(--primary-hsl-values), 0.75); /* Adjusted from 0.6 */
-  --mh-button-gradient-start: hsla(var(--primary-hsl-values), 0.85); /* Adjusted from 0.6 */
-  --mh-button-gradient-mid: hsla(var(--primary-hsl-values), 0.65); /* Adjusted from 0.4 */
-
-  /* Use theme variables for foreground elements on the button */
-  --mh-button-dots-color: hsl(var(--primary-foreground));
-  --mh-button-sparkle-color: hsl(var(--primary-foreground));
-  --mh-button-text-color: hsl(var(--primary-foreground));
-  --mh-button-text-hover-opacity: 1; /* Adjusted from 0.95 */
-
-
-  --mh-button-disabled-opacity: 0.6; /* Adjusted for better visibility when disabled */
-  --mh-button-disabled-bg: hsl(var(--muted)); /* Use theme muted for disabled bg */
-  --mh-button-disabled-shadow: inset 0 0.5px hsla(var(--primary-foreground-hsl-values), 0.1),
-                              inset 0 -1px 1px 0 hsla(0, 0%, 0%, 0.15); /* More subtle disabled shadow */
-
-  cursor: pointer;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  transform-origin: center;
-  padding: 0.8rem 1.5rem; /* Default padding */
-  background-color: transparent;
-  border: none;
-  border-radius: var(--mh-button-border-radius);
-  transform: scale(calc(1 + (var(--active, 0) * 0.05))); /* Reduced active scale slightly */
-  transition: transform var(--mh-button-transition);
-  min-width: 150px; /* Ensure some base width */
-}
-
-.analyze-button-animated::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  background-color: var(--mh-button-black-700); /* This is themed to --primary */
-  border-radius: var(--mh-button-border-radius);
-  box-shadow: inset 0 0.5px hsla(var(--primary-foreground-hsl-values), 0.2),
-              inset 0 -1px 1px 0 hsla(0, 0%, 0%, 0.3), /* Darker inner bottom shadow */
-              0px 2px 4px -1px hsla(var(--primary-hsl-values), calc(0.3 * (1 - var(--active, 0)))), /* Softer outer shadow */
-              0 0 0 calc(var(--active, 0) * 0.25rem) var(--mh-button-active-shadow-color);
-  transition: all var(--mh-button-transition);
-  z-index: 0;
-}
-
-.analyze-button-animated::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  background-color: hsla(var(--primary-hsl-values), 0.75); /* Base color for the after element */
-  background-image: radial-gradient(
-      at 51% 89%,
-      var(--mh-button-gradient-start) 0px,
-      transparent 50%
-    ),
-    radial-gradient(at 100% 100%, var(--mh-button-gradient-mid) 0px, transparent 50%),
-    radial-gradient(at 22% 91%, var(--mh-button-gradient-mid) 0px, transparent 50%);
-  background-position: top;
-  opacity: var(--active, 0);
-  border-radius: var(--mh-button-border-radius);
-  transition: opacity var(--mh-button-transition);
-  z-index: 2; /* Should be above ::before but below text/icon */
-}
-
-.analyze-button-animated:is(:hover, :focus-visible) {
-  --active: 1;
-}
-.analyze-button-animated:active {
-  transform: scale(0.98); /* Slightly more pronounced active press */
-}
-
-.analyze-button-animated .dots_border {
-  --size_border: calc(100% + 2px); /* Original size */
-  overflow: hidden;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: var(--size_border);
-  height: var(--size_border);
-  background-color: transparent;
-  border-radius: var(--mh-button-border-radius);
-  z-index: -10; /* Keep it behind */
-}
-
-.analyze-button-animated .dots_border::before {
-  content: "";
-  position: absolute;
-  top: 30%; /* Original value */
-  left: 50%;
-  transform: translate(-50%, -50%) rotate(0deg); /* Ensure it starts at 0deg */
-  transform-origin: center; /* Changed from left for smoother rotation */
-  width: 100%; /* Original value */
-  height: 2rem; /* Original value */
-  background-color: var(--mh-button-dots-color); /* Themed */
-  mask: linear-gradient(transparent 0%, var(--mh-button-dots-color) 120%);
-  animation: mh-rotateDots 2s linear infinite;
-}
-
-@keyframes mh-rotateDots {
-  to {
-    transform: translate(-50%, -50%) rotate(360deg); /* Ensure translate is maintained */
-  }
-}
-
-.analyze-button-animated .sparkle {
-  position: relative;
-  z-index: 10;
-  width: 1.5rem; /* Original value: 1.75rem, adjusted for balance */
-  height: 1.5rem; /* Original value: 1.75rem, adjusted for balance */
-}
-
-.analyze-button-animated .sparkle .path {
-  fill: currentColor; /* Allows color to be set by parent */
-  stroke: currentColor; /* Allows color to be set by parent */
-  transform-origin: center;
-  color: var(--mh-button-sparkle-color); /* Themed */
-}
-
-.analyze-button-animated:is(:hover, :focus) .sparkle .path {
-  animation: mh-pathSparkle 1.5s linear 0.5s infinite;
-}
-
-.analyze-button-animated .sparkle .path:nth-child(1) {
-  --scale_path_1: 1.2;
-}
-.analyze-button-animated .sparkle .path:nth-child(2) {
-  --scale_path_2: 1.2;
-}
-.analyze-button-animated .sparkle .path:nth-child(3) {
-  --scale_path_3: 1.2;
-}
-
-@keyframes mh-pathSparkle {
-  0%,
-  34%,
-  71%,
-  100% {
-    transform: scale(1);
-  }
-  17% {
-    transform: scale(var(--scale_path_1, 1));
-  }
-  49% {
-    transform: scale(var(--scale_path_2, 1));
-  }
-  83% {
-    transform: scale(var(--scale_path_3, 1));
-  }
-}
-
-.analyze-button-animated .text_button {
-  position: relative;
-  z-index: 10; /* Above ::after */
-  background-image: linear-gradient(
-    90deg,
-    var(--mh-button-text-color) 0%, /* Start with solid themed text color */
-    hsla(var(--primary-foreground-hsl-values), calc(var(--active, 0) * var(--mh-button-text-hover-opacity))) 120%
-  );
-  background-clip: text;
-  font-size: 1rem; /* Consistent font size */
-  color: transparent; /* To allow gradient to show through */
-  font-weight: 600;
-}
-
-/* Disabled state for analyze-button-animated */
-.analyze-button-animated:disabled {
-  cursor: not-allowed;
-  opacity: var(--mh-button-disabled-opacity);
-}
-
-.analyze-button-animated:disabled::before {
-  background-color: var(--mh-button-disabled-bg);
-  box-shadow: var(--mh-button-disabled-shadow);
-}
-
-.analyze-button-animated:disabled::after,
-.analyze-button-animated:disabled .dots_border::before {
-  display: none; /* Hide animations when disabled */
-}
-
-.analyze-button-animated:disabled .sparkle {
-  opacity: 0.3; /* Dim sparkle when disabled */
-}
-.analyze-button-animated:disabled .text_button {
-  background-image: none; /* Remove gradient */
-  color: hsl(var(--muted-foreground)); /* Show muted text color */
-}
+/* MuhammadHasann Animated Button CSS - REMOVED */
 
 
 /* Auth Card CSS (Yashasvi9199) - Adapted for theme */
@@ -937,11 +950,12 @@ main {
 .drop-zone {
   border: 2px dashed hsl(var(--border));
   border-radius: var(--radius);
-  padding: 2rem;
+  padding: 2rem; /* Ensures content is inside the dashed border */
   text-align: center;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-  background-color: hsl(var(--card));
+  background-color: hsl(var(--card)); /* Match card background for better blend if needed */
+  /* background-clip: padding-box; /* May help with border rendering */
 }
 
 .drop-zone-active {

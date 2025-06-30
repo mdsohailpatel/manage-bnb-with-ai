@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea"; // Import Textarea
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -20,7 +20,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { updateHome, removeHomeCoverImage } from "@/lib/firestore";
 import { homeFormSchema, type HomeFormData } from "@/schemas/homeSchemas";
-import { Pencil, Trash2 } from "lucide-react"; // Added Trash2
+import { Pencil, Trash2 } from "lucide-react";
 import type { Home, UpdateHomeData } from "@/types";
 import {
   Form,
@@ -50,18 +50,17 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
     resolver: zodResolver(homeFormSchema),
     defaultValues: {
       name: home.name,
-      description: home.description || "", // Add description default
+      address: home.address || "", // Use address, default to empty string if undefined
       coverImage: undefined,
-      // ownerDisplayName is not edited here to keep dialog simpler, can be added if needed
     },
   });
 
   useEffect(() => {
     if (open) {
-      form.reset({ 
-        name: home.name, 
-        description: home.description || "",
-        coverImage: undefined 
+      form.reset({
+        name: home.name,
+        address: home.address || "", // Reset with address
+        coverImage: undefined
       });
       setImagePreview(home.coverImageUrl || null);
     }
@@ -79,7 +78,7 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
       reader.readAsDataURL(file);
     } else {
       form.setValue("coverImage", undefined);
-      setImagePreview(home.coverImageUrl || null); 
+      setImagePreview(home.coverImageUrl || null);
     }
   };
 
@@ -90,14 +89,14 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
     }
     showLoader();
     try {
-      const homeUpdateData: UpdateHomeData = { 
+      const homeUpdateData: UpdateHomeData = {
         name: data.name,
-        description: data.description === "" ? null : data.description, // Send null to clear, or the value
+        address: data.address === "" ? null : data.address, // Send null to clear, or the value for address
       };
       const newCoverImageFile = data.coverImage && data.coverImage.length > 0 ? data.coverImage[0] : null;
-      
+
       await updateHome(home.id, user.uid, homeUpdateData, newCoverImageFile);
-      
+
       toast({ title: "Home Updated", description: `Home "${data.name}" has been successfully updated.` });
       onHomeUpdated();
       setOpen(false);
@@ -105,9 +104,9 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
       console.error("Failed to update home:", error);
       const errorMessage = error.message || "An unexpected error occurred.";
       if (error.name === 'QuotaExceededError' || (typeof error.message === 'string' && error.message.includes("quota"))) {
-        toast({ 
-            title: "Image Too Large", 
-            description: "New cover image is too large to save. Home details updated without changing image.", 
+        toast({
+            title: "Image Too Large",
+            description: "New cover image is too large to save. Home details updated without changing image.",
             variant: "destructive",
             duration: 7000,
          });
@@ -126,11 +125,11 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
     }
     showLoader();
     try {
-      await removeHomeCoverImage(home.id);
+      await removeHomeCoverImage(home.id, user.uid); // Pass userId
       setImagePreview(null);
-      form.setValue("coverImage", undefined); 
+      form.setValue("coverImage", undefined);
       toast({ title: "Cover Image Removed", description: "The cover image has been removed." });
-      onHomeUpdated(); 
+      onHomeUpdated();
     } catch (error: any) {
       console.error("Failed to remove cover image:", error)
       toast({ title: "Error", description: "Could not remove cover image: " + error.message, variant: "destructive"});
@@ -143,12 +142,12 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
     <Dialog open={open} onOpenChange={(isOpen) => {
       setOpen(isOpen);
       if (!isOpen) {
-        form.reset({ name: home.name, description: home.description || "", coverImage: undefined });
+        form.reset({ name: home.name, address: home.address || "", coverImage: undefined });
         setImagePreview(home.coverImageUrl || null);
       }
     }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="flex-1"> {/* Added flex-1 */}
           <Pencil className="mr-1 h-3 w-3" /> Edit
         </Button>
       </DialogTrigger>
@@ -156,7 +155,7 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Home</DialogTitle>
           <DialogDescription>
-            Update the name, description, or cover image for your home.
+            Update the name, address, or cover image for your home.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -176,16 +175,16 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
             />
             <FormField
               control={form.control}
-              name="description"
+              name="address" // Changed from description
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormLabel>Address (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Add address or description for your house"
+                      placeholder="Update the address of the home"
                       className="resize-none"
                       {...field}
-                      value={field.value ?? ""} // Handle null case for textarea
+                      value={field.value ?? ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -195,7 +194,7 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
             <FormField
               control={form.control}
               name="coverImage"
-              render={() => ( 
+              render={() => (
                 <FormItem>
                   <FormLabel>New Cover Image (Optional)</FormLabel>
                   <FormControl>
@@ -221,7 +220,7 @@ export function EditHomeDialog({ home, onHomeUpdated }: EditHomeDialogProps) {
                 </Button>
               </div>
             )}
-             {!imagePreview && ( // Show this if there's no current preview (either never set or removed)
+             {!imagePreview && (
                 <p className="text-sm text-muted-foreground text-center py-2">No cover image set. Upload one above.</p>
             )}
             <DialogFooter>

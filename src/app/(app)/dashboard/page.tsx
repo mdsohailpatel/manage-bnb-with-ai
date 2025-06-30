@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuthContext } from "@/hooks/useAuthContext";
 import { getHomes } from "@/lib/firestore";
 import type { Home } from "@/types";
@@ -10,33 +10,80 @@ import { CreateHomeDialog } from "@/components/dashboard/CreateHomeDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import { Home as HomeIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardPage() {
-  const { user } = useAuthContext();
+  const { user, loading: authLoading } = useAuthContext(); // Renamed loading to authLoading for clarity
   const [homes, setHomes] = useState<Home[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(true); // Page-specific loading state
+  const { toast } = useToast();
 
-  // Renamed from fetchHomes to handleHomesUpdated for clarity
-  const handleHomesUpdated = async () => {
-    if (user) {
-      setLoading(true);
+  const handleHomesUpdated = useCallback(async () => {
+    if (user && user.uid) { // Ensure user and user.uid are available
+      setPageLoading(true);
       try {
         const userHomes = await getHomes(user.uid);
         setHomes(userHomes);
       } catch (error) {
         console.error("Failed to fetch homes:", error);
-        // Optionally, show a toast message
+        toast({
+          title: "Error Loading Homes",
+          description: (error instanceof Error ? error.message : String(error)) + ". Please try refreshing or check permissions.",
+          variant: "destructive",
+          duration: 7000,
+        });
+        setHomes([]); // Clear homes on error
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
+    } else {
+      // No user or user.uid, so clear homes and stop loading
+      setHomes([]);
+      setPageLoading(false);
     }
-  };
+  }, [user, toast]); // Dependencies for useCallback
 
   useEffect(() => {
-    handleHomesUpdated();
-  }, [user]);
+    // Only proceed if auth is no longer loading
+    if (!authLoading) {
+      if (user && user.uid) {
+        // Welcome message logic
+        const shouldShowWelcome = sessionStorage.getItem("showWelcomeOnLoad");
+        if (shouldShowWelcome === "true") {
+          const lastAuthAction = sessionStorage.getItem("lastAuthAction");
+          const userName = user.displayName || user.email?.split('@')[0] || "User";
+          let toastTitle = "Welcome Back!";
+          let toastDescription = `Hello ${userName}, let's manage your homes.`;
 
-  if (loading) {
+          if (lastAuthAction === "signup") {
+            toastTitle = "Welcome to HomieStan!";
+            toastDescription = `Great to have you, ${userName}! Get started by creating your first home.`;
+          }
+
+          toast({
+            title: toastTitle,
+            description: toastDescription,
+            duration: 7000,
+          });
+
+          sessionStorage.removeItem("showWelcomeOnLoad");
+          sessionStorage.removeItem("lastAuthAction");
+        }
+        // Fetch homes
+        handleHomesUpdated();
+      } else {
+        // No user is logged in (and auth is not loading), clear homes and ensure page is not "loading"
+        setHomes([]);
+        setPageLoading(false);
+      }
+    } else {
+      // Auth is still loading, ensure page loading state reflects this
+      setPageLoading(true);
+    }
+  }, [user, authLoading, toast, handleHomesUpdated]); // Dependencies for useEffect
+
+
+  if (authLoading || pageLoading) { // Check both authLoading and page-specific loading
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
@@ -64,6 +111,14 @@ export default function DashboardPage() {
 
       {homes.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed border-muted-foreground/30 rounded-lg bg-card">
+          <Image
+            src="https://placehold.co/300x200.png"
+            alt="Empty state placeholder"
+            width={300}
+            height={200}
+            className="mx-auto mb-6 rounded-md opacity-70"
+            data-ai-hint="empty house illustration"
+          />
           <h2 className="text-2xl font-semibold mb-2 text-foreground">No Homes Yet!</h2>
           <p className="text-muted-foreground mb-6">
             Get started by creating your first home.
